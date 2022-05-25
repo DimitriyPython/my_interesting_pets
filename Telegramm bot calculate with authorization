@@ -1,0 +1,27 @@
+import telebot
+
+bot = telebot.TeleBot('#yourtoken')
+
+
+@bot.message_handler(commands=['start'])
+def start(message):
+    mess = 'Здравствуйте! Введите пароль:'
+    bot.send_message(message.chat.id, mess)
+
+
+@bot.message_handler()
+def authorization(message):
+    if message.text != 'vD~8dA5W#OOSA%?':
+        mess = 'Здравствуйте! Введите пароль:'
+        bot.send_message(message.chat.id, mess)
+    else:
+        mesg = bot.send_message(message.chat.id, 'Введите ваше выражение: ')
+        bot.register_next_step_handler(mesg, get_user_expressions)
+
+
+def get_user_expressions(message):
+    answer = (eval(message.text))
+    bot.send_message(message.chat.id, answer)
+
+
+bot.polling(none_stop=True)
