@@ -1,0 +1,242 @@
+import os
+
+import jsonpickle
+
+jsonpickle.set_encoder_options('json', indent=4, separators=(',', ':'), ensure_ascii=False)
+
+
+class FileIO:
+    """Класс для работы с файловой системой"""
+    def __init__(self, filename):
+        self.filename = filename
+
+    def write(self, value):
+        """Создание и перезапись файла"""
+        file = open(self.filename, 'w', encoding='utf-8')
+        file.write(value)
+        file.close()
+
+    def read(self):
+        """Чтение информации из файла"""
+        file = open(self.filename, 'r', encoding='utf-8')
+        lines = file.read()
+        file.close()
+        return lines
+
+    def exists(self, path):
+        """Проверка существования файла"""
+        return os.path.exists(path)
+
+
+class School:
+    """Создание объекта- школы"""
+    def __init__(self, name, address):
+        self.name = name
+        self.address = address
+
+
+class SchoolData:
+    """Даннык о школе"""
+    def __init__(self):
+        self.file = FileIO('school.json')
+        if os.path.exists('school.json'):
+            self.school = jsonpickle.decode(self.file.read())
+        else:
+            print("Введите название школы!")
+            school_name = self.validating_school_input()
+            print("Введите адрес школы!")
+            school_address = self.validating_school_input()
+            self.school = School(school_name, school_address)
+            self.file.write(jsonpickle.encode(self.school))
+
+    def get_info(self, number_students):
+        """Вывод информации о школе"""
+        print(f"1.Название школы:{self.school.name}")
+        print(f"2.Адрес школы:{self.school.address}")
+        print(f"3.Количество учеников:{number_students}")
+
+    def change_name(self):
+        """Ввод названия школы с сохранением"""
+        print("Введите новое название школы!")
+        new_name = self.validating_school_input()
+        self.school.name = new_name
+        self.file.write(jsonpickle.encode(self.school))
+
+    def change_address(self):
+        """Ввод адреса школы с сохранением"""
+        print("Введите новый адрес школы!")
+        new_address = self.validating_school_input()
+        self.school.address = new_address
+        self.file.write(jsonpickle.encode(self.school))
+
+    def validating_school_input(self):
+        """Проверка ввода"""
+        while True:
+            user_input = input("Введите данные!:")
+            if type(user_input) == int or type(user_input) == float:
+                print("Введите данные полностью!")
+                continue
+            elif user_input[0] == " ":
+                print("Данные не могут начинаться с пробела!")
+                continue
+            elif len(user_input) < 1:
+                print("Введите данные!")
+                continue
+            else:
+                break
+        return user_input
+
+
+class Student:
+    """Создание объекта- студента"""
+    def __init__(self, student_name, age, numbers_class, number=1):
+        self.number = number
+        self.student_name = student_name
+        self.age = age
+        self.numbers_class = numbers_class
+
+
+class StudentsStorage:
+    """Хранилище данных о студентах"""
+    def __init__(self):
+        self.file = FileIO('students.json')
+        if os.path.exists('students.json'):
+            self.students_list = jsonpickle.decode(self.file.read())
+        else:
+            self.students_list = []
+            self.file.write(jsonpickle.encode(self.students_list))
+
+    def get_all(self):
+        """Возвращает список с учениками"""
+        count = len(self.students_list)
+        students_list = []
+        for i in range(count):
+            students_list.append(self.students_list[i])
+        return students_list
+
+    def sorting_numering(self, students_list):
+        """Сортировка учеников"""
+        self.students_list = sorted(students_list, key=lambda student: student.student_name)
+        for i in range(len(students_list)):
+            self.students_list[i].number = i + 1
+
+    def show(self):
+        """Вывод учеников"""
+        for student in self.students_list:
+            print(f"""
+{student.number:5}. {student.student_name:15} - {student.age:3} лет, {student.numbers_class:3} класс.""")
+
+    def add_student(self):
+        while True:
+            names_student = input("Введите ФИО:")
+            names_student = names_student.title()
+            # В связи с отсутствием отчества у некоторых, двойными именами и тп.- один ввод.
+            if len(names_student) < 1:
+                print("Введите ФИО!")
+                continue
+            else:
+                break
+        while True:
+            ages_student = input("Введите возраст ученика:")
+            if not ages_student.isdigit():
+                print("Введите цифру!")
+                continue
+            else:
+                break
+        while True:
+            classes_student = input("Введите класс ученика:")
+            if (len(classes_student) == 0) or (len(classes_student) > 3):
+                print("Введите класс ученика!")
+            break
+        new_student = Student(names_student, ages_student, classes_student)
+        self.students_list.append(new_student)
+        self.sorting_numering(self.students_list)
+        self.file.write(jsonpickle.encode(self.students_list))
+
+    def delete_student(self):
+        for student in self.students_list:
+            print(f"{student.number:5}.{student.student_name:20}.")
+        while True:
+            num_deleted_string = input("Введите номер удаляемого ученика:")
+            if num_deleted_string.isdigit():
+                num_deleted = int(num_deleted_string)
+                if num_deleted in range(1, len(self.students_list) + 1):
+                    break
+                else:
+                    print("Введите номер ученика!")
+            else:
+                print("Введите число!")
+        self.students_list.pop(num_deleted - 1)
+        self.sorting_numering(self.students_list)
+        self.file.write(jsonpickle.encode(self.students_list))
+
+    def quantity(self):
+        quantity = len(self.students_list)
+        return quantity
+
+
+school = SchoolData()
+student_storage = StudentsStorage()
+students = student_storage.get_all()
+
+while True:
+    print('Приветствуем Вас в онлайн школе, что Вы хотите сделать?')
+    print('1 - Получить полную информацию о школе.')
+    print('2 - Изменить информацию о школе.')
+    print('3 - Просмотр учеников школы.')
+    print('4 - Добавить ученика.')
+    print('5 - Удалить ученика.')
+    print('0 - Выйти из программы')
+    while True:
+        user_answer_string = input('>: ')
+        if user_answer_string.isdigit():
+            user_answer = int(user_answer_string)
+            if user_answer in range(0, 6):
+                break
+            else:
+                print("Введите номер действия в меню!")
+        else:
+            print('Ответ должен быть положительным числом!')
+
+    if user_answer == 1:
+        quantity = student_storage.quantity()
+        school.get_info(quantity)
+        while True:
+            back = input('Для возврата в меню введите любую клавишу.')
+            break
+    elif user_answer == 2:
+        while True:
+            print('1 - Изменить название школы.')
+            print('2 - Изменить адрес школы.')
+            print('3 - Изменить название и адрес школы.')
+            print('0 - Назад.')
+            what_change_string = input("Введите номер изменения.")
+            while True:
+                if what_change_string.isdigit():
+                    what_change = int(what_change_string)
+                    if what_change in range(0, 4):
+                        break
+                    else:
+                        print("Введите номер действия!")
+                else:
+                    print('Ответ должен быть числом!')
+            if what_change == 1:
+                school.change_name()
+            elif what_change == 2:
+                school.change_address()
+            elif what_change == 3:
+                school.change_name()
+                school.change_address()
+            else:
+                break
+    elif user_answer == 3:
+        student_storage.show()
+        while True:
+            back = input('Для возврата в меню введите любую клавишу.')
+            break
+    elif user_answer == 4:
+        student_storage.add_student()
+    elif user_answer == 5:
+        student_storage.delete_student()
+    else:
+        break
