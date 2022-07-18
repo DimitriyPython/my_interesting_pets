@@ -1,0 +1,74 @@
+import random
+
+
+def generate_secret_word():
+    digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    secret_word = ""
+    for i in range(4):
+        random_index = random.randint(0, len(digits) - 1)
+        secret_word += str(digits[random_index])
+        digits.pop(random_index)
+
+    return secret_word
+
+
+def calculate_bulls_count(user_word, secret_word):
+    counter = 0
+    for i in range(len(secret_word)):
+        if secret_word[i] == user_word[i]:
+            counter += 1
+
+    return counter
+
+
+def calculate_cows_count(user_word, secret_word):
+    counter = 0
+    for i in range(len(user_word)):
+        if secret_word[i] != user_word[i] and user_word[i] in secret_word:
+            counter += 1
+
+    return counter
+
+
+def validing(secret_word):
+    while True:
+        user_word = input("Найди задуманное число:")
+        if not user_word.isdigit():
+            print("Вводите только цифры!")
+            continue
+        elif len(user_word) != len(secret_word):
+            print(f"Введите {len(secret_word)} цифр!")
+            continue
+        break
+    for i in user_word:
+        if user_word.count(i) > 1:
+            print("Введите разные цифры!")
+            user_word = input("Найди задуманное число:")
+
+    return user_word
+
+
+def playing():
+    secret_word = generate_secret_word()
+
+    while True:
+        user_word = validing(secret_word)
+        bulls_count = calculate_bulls_count(user_word, secret_word)
+        cows_count = calculate_cows_count(user_word, secret_word)
+
+        print(f"{bulls_count} быков, {cows_count} коров")
+
+        if bulls_count == 4:
+            print("Ура, ты победил!")
+            break
+
+
+playing()
+while True:
+    choice = input("Сыграем еще раз? Введите да или нет.").lower()
+    if choice == "да":
+        playing()
+    elif choice == "нет":
+        break
+    else:
+        print("Введите 'Да' или 'Нет'!")
