@@ -1,1 +1,41 @@
+import random
+print("Добро пожаловать в игру Загадай число'!")
+n = int(input("Введите верхнюю границу диапазона числа:"))
 
+
+def is_valid(user_input):
+    if user_input.isdigit():
+        user_number = int(user_input)
+        if user_number >= 1 and user_number <= n:
+            return True
+        else:
+            return False
+    else:
+        return False
+
+
+while True:
+    user_input = input(f"Введите свое число от 1 до {n}:")
+    if not is_valid(user_input):
+        continue
+    else:
+        break
+
+user_number = int(user_input)
+comp_number = 0
+while True:
+    comp_number = random.randint(1, n)
+    print(comp_number)
+    if comp_number > user_number:
+        print("Загаданное число меньше введенного.")
+        comp_number = random.randint(1, comp_number)
+    elif comp_number < user_number:
+        print("Загаданное число больше введенного.")
+        comp_number = random.randint(comp_number, n)
+    else:
+        print("Ура! Компьютер угадал загаданное число!")
+        choice = int(input("Сыграем еще раз? 1- да, иной ответ- нет"))
+        if choice == 1:
+            user_input = input("Введите свое новое число:")
+        else:
+            break
