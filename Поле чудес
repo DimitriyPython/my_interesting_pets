@@ -1,0 +1,51 @@
+def update_user_word(secret_word, user_world, char):
+    new_user_word = ""
+    for i in range(len(secret_word)):
+        if secret_word[i] == char:
+            new_user_word += char
+        else:
+            new_user_word += user_world[i]
+    return new_user_word
+
+
+trying = 0
+
+
+def playng():
+    secret_word = "академия"
+    user_word = "********"
+    print(user_word)
+    global trying
+    trying = 0
+    while user_word != secret_word:
+        answer = input("Попробуйте угадать слово: где обучаются сложным знаниям?").lower()
+        if answer == secret_word:
+            break
+        print("Вы не угадали, введите букву:")
+        user_char = input().lower()
+        if len(user_char) != 1:
+            continue
+        elif (ord(user_char) < 1072) or (ord(user_char) > 1103):
+            print("Введите русскую букву!")
+            continue
+        trying += 1
+        new_user_world = update_user_word(secret_word, user_word, user_char)
+        if user_word == new_user_world:
+            if user_char in new_user_world:
+                print("Вы уже вводили эту букву!")
+                trying -= 1
+            else:
+                print("К сожалению, такой буквы нет в слове.")
+        else:
+            print("Поздравляем, такая буква есть в слове!")
+        user_word = new_user_world
+        print(user_word)
+
+    return trying
+
+
+playng()
+print(f"Ура, вы угадали загаданное слово за {trying} попыток!")
+choice = input("Сыграем еще? Да или нет.")
+if choice == "Да":
+    playng()
