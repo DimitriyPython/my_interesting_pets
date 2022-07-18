@@ -1,0 +1,233 @@
+import os.path
+import random
+
+import jsonpickle
+
+
+class FileManager:
+    def get(self, path):
+        file = open(path, "r")
+        data = file.read()
+        file.close()
+        return data
+
+    def append(self, path, data):
+        file = open(path, "a")
+        data = file.write(data)
+        file.close()
+        return data
+
+    def exists(self, path):
+        return os.path.exists(path)
+
+    def clear(self, path):
+        file = open(path, "w")
+        data = file.write("")
+        file.close()
+
+    def writelines(self, path, data):
+        file = open(path, "w")
+        data = file.writelines(data)
+        file.close()
+
+
+class Question:
+    def __init__(self, text, answer):
+        self.text = text
+        self.answer = answer
+
+
+class QuestionsStorage:
+    def __init__(self):
+        self.questions_bank = "questions.json"
+
+    def get_all(self):
+        file_manager = FileManager()
+        if not file_manager.exists(self.questions_bank):
+            questions = [Question("Сколько будет два плюс два, умноженное на два?", 6),
+                         Question("Бревно нужно распилить на 10 частей, сколько надо сделать распилов?", 9),
+                         Question("На двух руках 10 пальцев, сколько пальцев на 5 руках?", 25),
+                         Question("Укол делают каждые полчаса, сколько нужно минут для трех уколов?", 60),
+                         Question("Пять свечей горело, две потухли, сколько свечей осталось?", 2)
+                         ]
+            self.safe(questions)
+
+        questions_data = file_manager.get(self.questions_bank)
+        questions = jsonpickle.decode(questions_data)
+        return questions
+
+    def safe(self, questions):
+        json_data = jsonpickle.encode(questions)
+        file_manager = FileManager()
+        file_manager.writelines(self.questions_bank, json_data)
+
+    def append_question(self):
+        while True:
+            new_question = input("Введите текст вопроса:")
+            new_answer = input("Введите ответ на этот вопрос:")
+            if not new_answer.isdigit():
+                print("Вводите только цифры!")
+                continue
+            else:
+                new_answer = int(new_answer)
+                break
+        new_question = Question(new_question, new_answer)
+        questions = self.get_all()
+        questions.append(new_question)
+        self.safe(questions)
+
+    def delete_question(self):
+        questions = self.get_all()
+        print('__________________________________')
+        for i in range(len(questions)):
+            print(f"{i + 1}.{questions[i].text}")
+        print('__________________________________')
+        while True:
+            choice = int(input("Введите номер удаляемого вопроса:"))
+            if choice < 1 or choice > len(questions):
+                continue
+            else:
+                break
+        questions.pop(choice - 1)
+        self.safe(questions)
+
+
+class User:
+    def __init__(self, name, count_right_answers=0, result="Неизвестно"):
+        self.name = name
+        self.count_right_answers = count_right_answers
+        self.result = result
+
+    def accept_right_answer(self):
+        self.count_right_answers += 1
+
+    def set_result(self, result):
+        self.result = result
+
+
+class UserResultStorage:
+    def safe(self, user):
+        results_bank = "results_my_tester.py"
+        data = f"{user.name}#{user.count_right_answers}#{user.result}\n"
+        file_manager = FileManager()
+        file_manager.append(results_bank, data)
+
+    def get_all(self):
+        results_bank = "results_my_tester.py"
+
+        file_manager = FileManager()
+        data = file_manager.get(results_bank).strip("\n")
+        data = data.split("\n")
+        users = []
+
+        for line in data:
+            values = line.split("#")
+            user = User(values[0], values[1], values[2])
+            users.append(user)
+
+        return users
+
+
+def calculate_result(count_right_answers):
+    questions = questions_storage.get_all()
+    count_questions = len(questions)
+    results_procent = count_right_answers / count_questions * 100
+    coefficient_procents = int(results_procent // 20)
+    rating = ["Идиот", "Кретин", "Дурак", "Нормальный", "Талант", "Гений"]
+    result = rating[coefficient_procents]
+    return result
+
+
+def show_user_result():
+    name = "Имя"
+    count_right_answers = 'Кол-во правильных ответов'
+    result = 'Результат'
+    print(f"{name:15}{count_right_answers :5}{result:15}")
+
+    users = user_result_storage.get_all()
+
+    for user in users:
+        print(f"{user.name:15}{user.count_right_answers:5}{user.result:15}")
+
+
+questions_storage = QuestionsStorage()
+user_result_storage = UserResultStorage()
+questions = questions_storage.get_all()
+
+
+def testing(questions):
+    user_name = input("Введите ваше имя:")
+    user = User(user_name)
+    for i in range(len(questions)):
+        random_index = random.randint(0, len(questions) - 1)
+        number_question = i + 1
+        print(f"Вопрос номер {number_question}")
+        print(questions[random_index].text)
+        while True:
+            user_answer = input()
+            if user_answer.isdigit():
+                user_answer = int(user_answer)
+                break
+            else:
+                print("Водите только цифры!")
+                continue
+
+        right_answer = questions[random_index].answer
+        if user_answer == right_answer:
+            user.accept_right_answer()
+        questions.pop(random_index)
+
+    result = calculate_result(user.count_right_answers)
+    user.set_result(result)
+    print(f"{user_name}, вы набрали {user.count_right_answers} баллов")
+    print(f"Вы {result}")
+
+    user_result_storage.safe(user)
+
+
+def ending():
+    while True:
+        repeat = input("Повторить тестирование?Да или нет?").lower()
+        if repeat == "да":
+            questions = questions_storage.get_all()
+            testing(questions)
+        elif repeat == "нет":
+            break
+        else:
+            print("Введите да или нет!")
+
+
+testing(questions)
+ending()
+
+while True:
+    choice_result = input("Хотите просмотреть свои результаты?Введите да или нет:")
+    if not choice_result.isalpha():
+        print("Введите буквы!")
+        continue
+    elif choice_result.lower() == "да":
+        show_user_result()
+        break
+    else:
+        break
+
+while True:
+    choice = input("Вы хотите добавить вопрос?").lower()
+    if choice == "да":
+        questions = questions_storage.get_all()
+        questions_storage.append_question()
+        break
+    elif choice == "нет":
+        break
+    else:
+        print("Введите 'да' или 'нет'!")
+
+while True:
+    choice = input("Хотите удалить один из вопросов?").lower()
+    if choice != "да" and choice != "нет":
+        print("Введите да или нет!")
+    elif choice == "нет":
+        break
+    elif choice == "да":
+        questions_storage.delete_question()
+        break
