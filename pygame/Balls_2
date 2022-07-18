@@ -1,0 +1,187 @@
+import random
+import time
+
+import pygame
+
+
+class Ball:
+    def __init__(self, display):
+        self.display = display
+        self.color = pygame.Color('red')
+        self.center_x = 100
+        self.center_y = 100
+        self.radius = 30
+
+        self.vx = 1
+        self.vy = 1
+
+    def show(self):
+        pygame.draw.circle(self.display, self.color, (self.center_x, self.center_y), self.radius)
+
+    def go(self):
+        self.center_x += self.vx
+        self.center_y += self.vy
+
+    def clear(self):
+        pygame.draw.circle(self.display, pygame.Color('white'), (self.center_x, self.center_y), self.radius)
+
+    def move(self):
+        self.clear()
+        self.go()
+        self.show()
+
+    def stop(self):
+        self.vx = 0
+        self.vy = 0
+
+    def ballsposition(self):
+        if (self.radius <= self.center_x <= (width - self.radius)) and (
+                self.radius <= self.center_y <= (height - self.radius)):
+            return True
+
+    def catching(self, ball):
+        x = ball.center_x
+        y = ball.center_y
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                a = event.pos
+                if (x - self.radius // 2 <= a[0] <= x + self.radius // 2) and (
+                        y - self.radius // 2 <= a[1] <= y + self.radius // 2) and ball.ballsposition():
+                    ball.stop()
+                    return True
+
+
+class RandomPointBall(Ball):
+    def __init__(self, display):
+        super().__init__(display)
+        self.color = pygame.Color('blue')
+
+        width, height = display.get_size()
+
+        self.center_x = random.randint(self.radius, width - self.radius)
+        self.center_y = random.randint(self.radius, height - self.radius)
+
+
+class PointBall(Ball):
+    def __init__(self, display, x, y):
+        super().__init__(display)
+
+        self.color = pygame.Color('yellow')
+
+        self.center_x = x
+        self.center_y = y
+
+
+class RandomPointMovableBall(RandomPointBall):
+    def __init__(self, display):
+        super().__init__(display)
+
+        self.vx = random.randint(-3, 3)
+        self.vy = random.randint(-3, 3)
+        if self.vy == 0 and self.vx == 0:
+            while self.vx != 0 and self.vy != 0:
+                self.vx = random.randint(-3, 3)
+                self.vy = random.randint(-3, 3)
+
+
+class BillyardBall(RandomPointBall):
+    def __init__(self, display):
+        super().__init__(display)
+        self.color = pygame.Color("green")
+
+    def go(self):
+        super().go()
+
+        width, height = self.display.get_size()
+        if self.center_x <= self.radius or self.center_x >= width - self.radius:
+            self.vx = -self.vx
+        if self.center_y <= self.radius or self.center_y >= height - self.radius:
+            self.vy = -self.vy
+
+
+class HittingsScore(BillyardBall):
+    def __init__(self, display, rightwall=0, leftwall=0, up=0, down=0):
+        super().__init__(display)
+        self.rightwall = rightwall
+        self.leftwall = leftwall
+        self.up = up
+        self.down = down
+
+    def hitting(self):
+        super().go()
+
+        count_hitting = HittingsScore(display)
+        if self.center_x <= self.radius:
+            self.leftwall += 1
+        elif self.center_x >= width - self.radius:
+            self.rightwall += 1
+        elif self.center_y <= self.radius:
+            self.up += 1
+        elif self.center_y >= height - self.radius:
+            self.down += 1
+        return count_hitting
+
+pygame.init()
+
+width = 700
+height = 400
+display = pygame.display.set_mode((width, height))
+display.fill(pygame.Color('white'))
+
+balls = []
+for i in range(5):
+    ball = RandomPointMovableBall(display)
+    ball.show()
+    balls.append(ball)
+
+    ball = BillyardBall(display)
+    ball.show()
+    balls.append(ball)
+
+pygame.display.flip()
+
+time.sleep(2)
+
+clock = pygame.time.Clock()
+count_ball = 0
+count_hitting = HittingsScore(display)
+while True:
+    event_list = pygame.event.get()
+    for event in event_list:
+        if event.type == pygame.QUIT:
+            pygame.quit()
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            for ball in balls:
+                if ball.catching(ball):
+                    count_ball += 1
+                    pygame.display.flip()
+
+    for ball in balls:
+        ball.move()
+        count_hitting.hitting()
+        print(count_hitting.leftwall, count_hitting.rightwall, count_hitting.up, count_hitting.down)
+    pygame.display.flip()
+
+    text = pygame.font.SysFont('arial', 40)
+    count_text = text.render(f"Вы поймали {count_ball} шара!", False, (180, 0, 0))
+
+    left = pygame.font.SysFont('arial', 15)
+    left_text = left.render(f"{count_hitting.leftwall} ударов", False, (180, 0, 0))
+
+    right = pygame.font.SysFont('arial', 15)
+    right_text = right.render(f"{count_hitting.rightwall} ударов", False, (180, 0, 0))
+
+    up = pygame.font.SysFont('arial', 15)
+    up_text = up.render(f"{count_hitting.up} ударов", False, (180, 0, 0))
+
+    down = pygame.font.SysFont('arial', 15)
+    down_text = down.render(f"{count_hitting.down} ударов", False, (180, 0, 0))
+
+    display.blit(left_text, (5, 200))
+    display.blit(right_text, (630, 200))
+    display.blit(up_text, (300, 5))
+    display.blit(down_text, (300, 380))
+    display.blit(count_text, (200, 200))
+    pygame.display.flip()
+    clock.tick(60)
