@@ -1,0 +1,52 @@
+from random import choice
+
+
+class Lottery:
+    """Генерирует билет пользователя и победный, сравнение билетов"""
+    def __init__(self):
+        self.list = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'a', 'b', 'c', 'd', 'e']
+
+    def win_ticket(self):
+        """Генерация победного билета"""
+        win_tick = []
+        for i in range(4):
+            i = choice(self.list)
+            win_tick.append(i)
+
+        return win_tick
+
+    def user_ticket(self):
+        """Генерирует пользовательский билет"""
+        user_tick = []
+        for i in range(4):
+            i = choice(self.list)
+            user_tick.append(i)
+
+        return user_tick
+
+    def comparison_ticket(self, ticket):
+        """Сравнивает билеты пользователя с победным"""
+        win_tick = self.win_ticket()
+        print(f'Your ticket are {ticket}')
+        if ticket == win_tick:
+            print('Your ticket are winning!')
+        else:
+            print(f'{win_tick} are winning tick! You lose')
+
+
+class AnalysisLottery(Lottery):
+    """Проверяет насколько сложно выиграть лотерею"""
+    def __init__(self):
+        super().__init__()
+
+    def analysis(self):
+        """Считает количество генерация билета пользователя до победы"""
+        win_tick = self.win_ticket()
+        numbers_lottery = 0
+        while True:
+            numbers_lottery += 1
+            user_tick = self.user_ticket()
+            if user_tick == win_tick:
+                break
+
+        print(f'{numbers_lottery} - number of times for win in lottery')
