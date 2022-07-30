@@ -1,0 +1,14 @@
+filename = "namefile.txt"
+counter = {}
+
+with open(filename) as f:
+    content = f.read()
+    words = content.split()
+    for word in words:
+        counter[word] = counter.get(word, 0) + 1
+
+max_count = max(counter.values())
+most_frequent = [k for k, v in counter.items() if v == max_count]
+a = min(most_frequent)
+print(a)
+print(counter[a])
